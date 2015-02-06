@@ -309,11 +309,19 @@ sub webqq_cmd_qstatus {
   return weechat::WEECHAT_RC_OK;
 }
 
-# 更改群消息
+# 更改群信息
 sub webqq_cmd_qgroup {
   my ($data, $buffer, $status) = @_;
   _send_json('update_group', '');
   weechat::print($buffer, "<--\t群更新指令已发出");
+  return weechat::WEECHAT_RC_OK;
+}
+
+# 重新登录
+sub webqq_cmd_relogin {
+  my ($data, $buffer, $status) = @_;
+  _send_json('relogin', '');
+  weechat::print($buffer, "<--\t重新登录指令已发出");
   return weechat::WEECHAT_RC_OK;
 }
 
@@ -371,6 +379,11 @@ weechat::hook_command("qgroup", "update qq group info",
                      "update qq group info",
                      "",
                      "webqq_cmd_qgroup", "");
+weechat::hook_command("qrelogin", "relogin qq",
+                     "<keyword>",
+                     "relogin",
+                     "",
+                     "webqq_cmd_relogin", "");
 weechat::hook_command("qstatus", "change online status",
                      "<keyword>",
                      "status: online|away|busy|silent|hidden|offline",
