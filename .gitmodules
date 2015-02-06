@@ -1,0 +1,3 @@
+[submodule "Webqq-Client"]
+	path = Webqq-Client
+	url = https://github.com/sjdy521/Webqq-Client.git
