@@ -48,10 +48,7 @@ sub _format_timestamp {
 
 sub _msg_func_clean {
   weechat::print($main_buf, "*\t清理webqq环境...");
-  if (%friend_list) {
-    weechat::nicklist_remove_all($main_buf);
-    %friend_list = ();
-  }
+  %friend_list = ();
   %nick_group  = ();
   while (my ($key,$val) = each %buffer_group) {
     if ($buffer_group{$key} ne $main_buf) {
@@ -63,6 +60,7 @@ sub _msg_func_clean {
       if ($has_nicklist == 0) {
         weechat::buffer_set($main_buf, "nicklist", "1");
       }
+      # weechat::nicklist_remove_all($main_buf);
     }
   }
 }
@@ -305,7 +303,7 @@ sub webqq_cmd_qpass {
 sub webqq_cmd_qstatus {
   my ($data, $buffer, $status) = @_;
   _send_json('change_status', $status);
-  weechat::print($buffer, "-->\t状态( $status )修改指令已发出");
+  weechat::print($buffer, "<--\t状态( $status )修改指令已发出");
   return weechat::WEECHAT_RC_OK;
 }
 
