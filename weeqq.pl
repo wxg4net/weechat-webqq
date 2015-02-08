@@ -20,6 +20,7 @@ my %commands = (
   'STDERR'         => \&_msg_func_stderr,
   'user'           => \&_msg_func_user,
   'friend'         => \&_msg_func_friend,
+  'recent'         => \&_msg_func_recent,
   'group'          => \&_msg_func_group,
   'member'         => \&_msg_func_member,
   'message'        => \&_msg_func_message,
@@ -97,7 +98,19 @@ sub _msg_func_friend {
   my $nick =  $friend->{uin}."(".decode("utf-8", $friend->{nick}).")";
      $nick =~  s/^\s+|\s+$//g;
   push( @{ $friend_list { $nick } }, $friend->{markname} ); 
-  weechat::nicklist_add_nick($main_buf, $nick_group{$categorie}, $nick, 'bar_fg', '', '', 1);
+  my $prefix = ' ';
+  my $online_color = 'bar_fg';
+  $prefix = '+' if $friend->{state};
+  $online_color = 'lightgreen' if $friend->{state} and $friend->{state} eq  'online';
+  weechat::nicklist_add_nick($main_buf, 
+    $nick_group{$categorie}, $nick, $online_color, $prefix, '', 1);
+}
+
+sub _msg_func_recent {
+  my $friend = shift;
+  my $nick =  $friend->{uin}."(".decode("utf-8", $friend->{nick}).")";
+     $nick =~  s/^\s+|\s+$//g;
+  weechat::print($main_buf, "*\tnotice: ".$nick);
 }
 
 sub _msg_func_group {

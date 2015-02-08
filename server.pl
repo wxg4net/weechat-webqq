@@ -11,7 +11,7 @@ use AnyEvent::Socket;
 use AnyEvent::Handle;
 use Webqq::Client;
 use Digest::MD5 qw(md5_hex);
-use Webqq::Client::Util qw(console);
+use Webqq::Client::Util qw(console code2client);
 
 our ($client, $handle);
 $| = 1;
@@ -41,8 +41,8 @@ sub _send_json {
 
 sub _send_qq_database {
   my $code = shift;
-  $code = 7 unless $code;
-  if ($code == 7) {
+  $code = 127 unless $code;
+  if ($code == 127) {
     _send_json('clean', 'init');
   }
   _send_json('STDOUT', '准备发送用户数据...');
@@ -68,6 +68,16 @@ sub _send_qq_database {
           _send_json('member', \%data);
         }
       } 
+    }
+    elsif ($key eq 'recent_list' && ($code & 8)) {
+      for my $f ( @{ $client->{qq_database}{recent_list} }){
+        if ($f->{type} == 0) {
+          my $recent = $client->search_friend($f->{uin});
+          if ($recent ) {
+            _send_json('recent', $recent);
+          }
+        }
+      }
     }
     else { }
   }
@@ -176,7 +186,7 @@ sub _msg_func_change_status {
 sub _msg_func_update_group {
   my $msg = shift;
   $client->update_group_info();
-  _send_qq_database(4);;
+  _send_qq_database(4);
 }
 
 # 更新好友或群成员列表
@@ -198,7 +208,9 @@ sub _msg_func_info {
     my $member = $client->search_friend($data->{uin});
     if ($member) {
       $content .= "\n昵称：".$member->{nick} .
-                  "\n号码：".$client->get_qq_from_uin($data->{uin});
+                  "\n状态：".$member->{state}.
+                  "\n程序：".code2client($member->{client_type}).
+                  "\nQQ号：".$client->get_qq_from_uin($data->{uin});
     }
   }
   my %msg = (
