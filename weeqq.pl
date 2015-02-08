@@ -100,17 +100,29 @@ sub _msg_func_friend {
   push( @{ $friend_list { $nick } }, $friend->{markname} ); 
   my $prefix = ' ';
   my $online_color = 'bar_fg';
-  $prefix = '+' if $friend->{state};
-  $online_color = 'lightgreen' if $friend->{state} and $friend->{state} eq  'online';
+  if ($friend->{state}) {
+    my $prefix = '+';
+    if ($friend->{state} eq 'online') {
+      $online_color = 'lightgreen';
+    }
+  }
   weechat::nicklist_add_nick($main_buf, 
-    $nick_group{$categorie}, $nick, $online_color, $prefix, '', 1);
+    $nick_group{$categorie}, $nick, $online_color, $prefix, $online_color, 1);
 }
 
 sub _msg_func_recent {
   my $friend = shift;
   my $nick =  $friend->{uin}."(".decode("utf-8", $friend->{nick}).")";
      $nick =~  s/^\s+|\s+$//g;
-  weechat::print($main_buf, "*\tnotice: ".$nick);
+  my $online_color = '';
+  my $prefix = ' ';
+  if ($friend->{state}) {
+    my $prefix = '+';
+    if ($friend->{state} eq 'online') {
+      $online_color = weechat::color("lightgreen");
+    }
+  }
+  weechat::print($main_buf, "*\trecently: ".$online_color.$prefix.$nick);
 }
 
 sub _msg_func_group {
@@ -125,6 +137,7 @@ sub _msg_func_group {
     $buffer_group{$group->{gid}} = 
       weechat::buffer_new($buf_name , "buffer_group_input_cb", $group->{gid}, "buffer_group_close_cb", $group->{gid});
     weechat::buffer_set($buffer_group{$group->{gid}}, "localvar_set_nick", '(i)');
+    weechat::buffer_set($buffer_group{$group->{gid}}, "localvar_set_group", 'qq');
   }
   weechat::buffer_set($buffer_group{$group->{gid}}, "nicklist", "1");
 }
@@ -339,6 +352,10 @@ sub webqq_cmd_relogin {
 # 查看用户详细信息
 sub webqq_cmd_query {
   my ($data, $buffer, $user) = @_;
+  my $group = weechat::buffer_get_string($buffer, 'localvar_group');
+  unless ($group eq 'qq') {
+    return weechat::WEECHAT_RC_OK;
+  }
   my $gid;
   for my $key (sort keys %buffer_group){
     if ($buffer_group{$key} eq $buffer) {
@@ -352,7 +369,7 @@ sub webqq_cmd_query {
     _send_json('info', \%data);
     weechat::print($buffer, "<--\t查询 [$uin] 指令从 [$gid] 发出");
   }
-  return weechat::WEECHAT_RC_OK_EAT ;
+  return weechat::WEECHAT_RC_OK_EAT;
 }
 
 sub webqq_fd_cb {
@@ -421,6 +438,7 @@ if ($server_path
       Listen => 1,
   );
   weechat::hook_process("perl $server_path $sock_path", 0, "buffer_close_cb", '');
+  weechat::buffer_set($main_buf, "localvar_set_group", 'qq');
   $client = $socket->accept;
   my %info = (qq=>$qq, pwd=>$pwd);
   _send_json('login', \%info);

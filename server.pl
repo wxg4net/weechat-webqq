@@ -73,7 +73,7 @@ sub _send_qq_database {
       for my $f ( @{ $client->{qq_database}{recent_list} }){
         if ($f->{type} == 0) {
           my $recent = $client->search_friend($f->{uin});
-          if ($recent ) {
+          if ($recent) {
             _send_json('recent', $recent);
           }
         }
