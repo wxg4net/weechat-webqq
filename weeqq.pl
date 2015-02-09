@@ -101,7 +101,7 @@ sub _msg_func_friend {
   my $prefix = ' ';
   my $online_color = 'bar_fg';
   if ($friend->{state}) {
-    my $prefix = '+';
+    $prefix = '+';
     if ($friend->{state} eq 'online') {
       $online_color = 'lightgreen';
     }
@@ -117,7 +117,7 @@ sub _msg_func_recent {
   my $online_color = '';
   my $prefix = ' ';
   if ($friend->{state}) {
-    my $prefix = '+';
+    $prefix = '+';
     if ($friend->{state} eq 'online') {
       $online_color = weechat::color("lightgreen");
     }
