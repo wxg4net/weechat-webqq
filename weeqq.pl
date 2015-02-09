@@ -328,7 +328,7 @@ sub webqq_cmd_qpass {
 # 更改在线状态
 sub webqq_cmd_qstatus {
   my ($data, $buffer, $status) = @_;
-  _send_json('change_status', $status);
+  _send_json('change_state', $status);
   weechat::print($buffer, "<--\t状态( $status )修改指令已发出");
   return weechat::WEECHAT_RC_OK;
 }

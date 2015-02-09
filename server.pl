@@ -12,6 +12,7 @@ use AnyEvent::Handle;
 use Webqq::Client;
 use Digest::MD5 qw(md5_hex);
 use Webqq::Client::Util qw(console code2client);
+use List::Util qw(first);
 
 our ($client, $handle);
 $| = 1;
@@ -24,7 +25,7 @@ my %commands = (
   'relogin'       => \&_msg_func_relogin,
   'info'          => \&_msg_func_info,
   'update_group'  => \&_msg_func_update_group,
-  'change_status' => \&_msg_func_change_status,
+  'change_state' => \&_msg_func_change_state,
 );
 
 # 数据被包装成json格式发送
@@ -117,6 +118,8 @@ sub _msg_func_login {
     my $msg = shift;
     $client->call("StopSpam", $msg);
     $client->call("SmartReplyForProject", $msg);
+    my $f = first {$_ eq $msg->{type}} qw(message group_message sess_message);
+    return undef unless defined $f;
     my %data = (
       'msg_type'    => $msg->{type}, 
       'msg_time'    => $msg->{msg_time}, 
@@ -177,9 +180,9 @@ sub _msg_func_relogin {
 }
 
 # 修改在线状态
-sub _msg_func_change_status {
+sub _msg_func_change_state {
   my $status = shift;
-  $client->change_status($status);
+  $client->change_state($status);
 }
 
 # 更新好友或群成员列表
