@@ -59,19 +59,40 @@ sub _send_qq_database {
     }
     elsif ($key eq 'group' && ($code & 4)) {
       for my $g ( @{$client->{qq_database}{group}} ){
-        _send_json('group', $g->{ginfo});
+        my %data = (
+          gid  => $g->{ginfo}{gid},
+          name => $g->{ginfo}{name},
+        );
+        _send_json('group', \%data);
         for my $m (@{ $g->{minfo}  }){
           my %data = (
             gid   => $g->{ginfo}{gid}, 
-            gname => $g->{ginfo}{name},
+            name  => $g->{ginfo}{name},
             data  => $m,
           );
           _send_json('member', \%data);
         }
       } 
     }
-    elsif ($key eq 'recent_list' && ($code & 8)) {
-      for my $f ( @{ $client->{qq_database}{recent_list} }){
+   elsif ($key eq 'discuss' && ($code & 16)) {
+      for my $g ( @{$client->{qq_database}{discuss}} ){
+        my %data = (
+          gid  => $g->{dinfo}{did},
+          name => $g->{dinfo}{name},
+        );
+        _send_json('group', \%data);
+        for my $m (@{ $g->{minfo} }){
+          my %data = (
+            gid   => $g->{dinfo}{did}, 
+            name  => $g->{dinfo}{name},
+            data  => $m,
+          );
+          _send_json('member', \%data);
+        }
+      } 
+    }
+    elsif ($key eq 'recent' && ($code & 8)) {
+      for my $f ( @{ $client->{qq_database}{recent} }){
         if ($f->{type} == 0) {
           my $recent = $client->search_friend($f->{uin});
           if ($recent) {
@@ -118,7 +139,7 @@ sub _msg_func_login {
     my $msg = shift;
     $client->call("StopSpam", $msg);
     $client->call("SmartReplyForProject", $msg);
-    my $f = first {$_ eq $msg->{type}} qw(message group_message sess_message);
+    my $f = first {$_ eq $msg->{type}} qw(message group_message discuss_message sess_message);
     return undef unless defined $f;
     my %data = (
       'msg_type'    => $msg->{type}, 
@@ -132,9 +153,13 @@ sub _msg_func_login {
       $data{'group_name'} = $msg->group_name();
       $data{'from_card'}  = $msg->from_card();
     }
+    elsif($msg->{type} eq 'discuss_message') {
+      $data{'group_name'} = $msg->discuss_name();
+    }
     elsif($msg->{type} eq 'sess_message') {
       $data{'group_code'}   = $msg->{group_code};
     }
+    
     _send_json($msg->{type}, \%data);
   };
   

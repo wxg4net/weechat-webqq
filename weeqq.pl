@@ -25,6 +25,7 @@ my %commands = (
   'member'         => \&_msg_func_member,
   'message'        => \&_msg_func_message,
   'group_message'  => \&_msg_func_group_message,
+  'discuss_message'=> \&_msg_func_discuss_message,
   'sess_message'   => \&_msg_func_sess_message,
   'info'           => \&_msg_func_info,
 );
@@ -156,7 +157,7 @@ sub _msg_func_message {
   my $msg   = shift;
   my $extra = shift;
   my $nick = decode("utf-8", $msg->{from_nick});
-     $nick = '未知' unless $nick;
+     $nick = $nick || '*';
   unless ($buffer_group{$msg->{from_uin}}) {
     $extra = '' unless $extra;
     $buffer_group{$msg->{from_uin}} = 
@@ -172,7 +173,23 @@ sub _msg_func_group_message {
     $msg->{from_card}
       ? $msg->{from_card}
       : $msg->{from_nick}
-  );
+    );
+  $nick = $nick || '-';
+  my $content = substr($msg->{send_uin},0,4).'('.$nick.")\t".decode("utf-8", $msg->{content});
+  my $gid     = $msg->{from_uin};
+  if ($buffer_group{$gid}) {
+    weechat::print_date_tags($buffer_group{$gid}, $msg->{msg_time}, '', $content);
+  }
+  else {
+    _msg_func_stderr("$gid in \$buffer_group not found");
+    weechat::print($main_buf, $content);
+  }
+}
+
+sub _msg_func_discuss_message {
+  my $msg = shift;
+  my $nick  = decode("utf-8",  $msg->{from_nick});
+  $nick = $nick || '-';
   my $content = substr($msg->{send_uin},0,4).'('.$nick.")\t".decode("utf-8", $msg->{content});
   my $gid     = $msg->{from_uin};
   if ($buffer_group{$gid}) {
